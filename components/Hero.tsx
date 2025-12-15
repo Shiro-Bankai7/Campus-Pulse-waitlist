@@ -329,7 +329,8 @@ export default function Hero() {
                 {/* Deep Purple Night Base */}
                 <div className="absolute inset-0 bg-gradient-to-b from-purple/60 via-night/70 to-night/95" />
                 {/* Purple Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-radial from-purple/40 via-lavender/15 to-transparent opacity-80" />
+                {/* Purple Glow Effect - Hidden on mobile for performance */}
+                <div className="hidden md:block absolute inset-0 bg-gradient-radial from-purple/40 via-lavender/15 to-transparent opacity-80" />
                 {/* Additional Night Glow from Bottom */}
                 <div className="absolute inset-0 bg-gradient-to-t from-purple/30 via-transparent to-transparent" />
             </div>
@@ -414,7 +415,7 @@ export default function Hero() {
                     {/* Animated person */}
                     <div
                         ref={leftPersonRef}
-                        className="cursor-pointer relative grid grid-cols-1 grid-rows-1 origin-bottom"
+                        className="cursor-pointer relative grid grid-cols-1 grid-rows-1 origin-bottom will-change-transform backface-hidden"
                         onClick={() => toggleBubble(1, leftPersonRef)}
                         onMouseEnter={() => handleMouseEnter(1, leftPersonRef)}
                         onMouseLeave={() => handleMouseLeave(leftPersonRef)}
@@ -474,7 +475,7 @@ export default function Hero() {
                     {/* Animated person */}
                     <div
                         ref={rightPersonRef}
-                        className="cursor-pointer relative grid grid-cols-1 grid-rows-1 origin-bottom"
+                        className="cursor-pointer relative grid grid-cols-1 grid-rows-1 origin-bottom will-change-transform backface-hidden"
                         onClick={() => toggleBubble(2, rightPersonRef)}
                         onMouseEnter={() => handleMouseEnter(2, rightPersonRef)}
                         onMouseLeave={() => handleMouseLeave(rightPersonRef)}
