@@ -8,6 +8,56 @@ import Logo from "./Logo";
 import { animate } from "animejs";
 import confetti from 'canvas-confetti';
 import gsap from 'gsap';
+import { useMemo } from 'react';
+
+// Helper to remove bouncing/bobbing from Lottie animations to ensure they stay grounded
+// Extracted outside component to prevent re-creation on every render
+const flattenLottieVerticalMotion = (lottieData: any) => {
+    try {
+        const newData = JSON.parse(JSON.stringify(lottieData)); // Deep clone
+        if (newData.layers) {
+            newData.layers.forEach((layer: any) => {
+                // Check for position data
+                if (layer.ks && layer.ks.p && layer.ks.p.k) {
+                    let groundY = 378; // Default fallback
+                    let originalX = 672; // Default fallback
+
+                    // If keyframes exist and are an array of objects (standard Lottie keyframe format)
+                    if (Array.isArray(layer.ks.p.k) && layer.ks.p.k.length > 0 && typeof layer.ks.p.k[0] === 'object' && 's' in layer.ks.p.k[0]) {
+                        // Find the 'lowest' point (max Y value) in the animation
+                        // Lottie Y axis: 0 is top, higher values are lower down
+                        const yValues = layer.ks.p.k
+                            .map((k: any) => (Array.isArray(k.s) ? k.s[1] : null))
+                            .filter((y: any) => typeof y === 'number');
+
+                        const xValues = layer.ks.p.k
+                            .map((k: any) => (Array.isArray(k.s) ? k.s[0] : null))
+                            .filter((x: any) => typeof x === 'number');
+
+                        if (yValues.length > 0) {
+                            groundY = Math.max(...yValues);
+                        }
+                        if (xValues.length > 0) {
+                            originalX = xValues[0]; // Keep original X
+                        }
+                    }
+                    // If it's a flat array [x, y, z] (static position)
+                    else if (Array.isArray(layer.ks.p.k) && layer.ks.p.k.length >= 2 && typeof layer.ks.p.k[1] === 'number') {
+                        groundY = layer.ks.p.k[1];
+                        originalX = layer.ks.p.k[0];
+                    }
+
+                    // Override position to lock at the calculated ground level
+                    layer.ks.p.a = 0;
+                    layer.ks.p.k = [originalX, groundY, 0];
+                }
+            });
+        }
+        return newData;
+    } catch (e) {
+        return lottieData;
+    }
+};
 
 export default function Hero() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,57 +82,11 @@ export default function Hero() {
     const ss4 = require("../public/animations/ss4.json");
     const ss2 = require("../public/animations/ss2.json");
 
-    // Helper to remove bouncing/bobbing from Lottie animations to ensure they stay grounded
-    const flattenLottieVerticalMotion = (lottieData: any) => {
-        try {
-            const newData = JSON.parse(JSON.stringify(lottieData)); // Deep clone
-            if (newData.layers) {
-                newData.layers.forEach((layer: any) => {
-                    // Check for position data
-                    if (layer.ks && layer.ks.p && layer.ks.p.k) {
-                        let groundY = 378; // Default fallback
-                        let originalX = 672; // Default fallback
-
-                        // If keyframes exist and are an array of objects (standard Lottie keyframe format)
-                        if (Array.isArray(layer.ks.p.k) && layer.ks.p.k.length > 0 && typeof layer.ks.p.k[0] === 'object' && 's' in layer.ks.p.k[0]) {
-                            // Find the 'lowest' point (max Y value) in the animation
-                            // Lottie Y axis: 0 is top, higher values are lower down
-                            const yValues = layer.ks.p.k
-                                .map((k: any) => (Array.isArray(k.s) ? k.s[1] : null))
-                                .filter((y: any) => typeof y === 'number');
-
-                            const xValues = layer.ks.p.k
-                                .map((k: any) => (Array.isArray(k.s) ? k.s[0] : null))
-                                .filter((x: any) => typeof x === 'number');
-
-                            if (yValues.length > 0) {
-                                groundY = Math.max(...yValues);
-                            }
-                            if (xValues.length > 0) {
-                                originalX = xValues[0]; // Keep original X
-                            }
-                        }
-                        // If it's a flat array [x, y, z] (static position)
-                        else if (Array.isArray(layer.ks.p.k) && layer.ks.p.k.length >= 2 && typeof layer.ks.p.k[1] === 'number') {
-                            groundY = layer.ks.p.k[1];
-                            originalX = layer.ks.p.k[0];
-                        }
-
-                        // Override position to lock at the calculated ground level
-                        layer.ks.p.a = 0;
-                        layer.ks.p.k = [originalX, groundY, 0];
-                    }
-                });
-            }
-            return newData;
-        } catch (e) {
-            return lottieData;
-        }
-    };
-
-    // Apply flattening to all animations
-    const rawAnimations = [ss1, ss3, ss5, ss7, ss6, ss4, ss2];
-    const animations = rawAnimations.map(flattenLottieVerticalMotion);
+    // Memoize animations to prevent expensive deep cloning on every render
+    const animations = useMemo(() => {
+        const rawAnimations = [ss1, ss3, ss5, ss7, ss6, ss4, ss2];
+        return rawAnimations.map(flattenLottieVerticalMotion);
+    }, []); // Empty dependency array means this runs only once on mount
 
     const [activeBubble, setActiveBubble] = useState<number | null>(null);
     const [isHovering, setIsHovering] = useState<number | null>(null);
@@ -389,7 +393,7 @@ export default function Hero() {
             <div className="absolute inset-0 w-full h-full z-10 select-none overflow-hidden pointer-events-none">
 
                 {/* Left Side - Person 1 */}
-                <div className="absolute -bottom-[12%] sm:-bottom-[8%] left-[-5%] sm:left-[-2%] w-[650px] sm:w-[480px] lg:w-[630px] xl:w-[780px] pointer-events-auto">
+                <div className="absolute -bottom-[12%] sm:-bottom-[8%] left-[-20%] sm:left-[-2%] w-[120vw] sm:w-[480px] lg:w-[630px] xl:w-[780px] pointer-events-auto transform-gpu">
                     {/* Chat bubble on desktop */}
                     <div className="hidden md:block absolute top-[10%] left-1/2 -translate-x-1/2 z-50">
                         <ChatBubble isHovered={activeBubble === 1} />
@@ -448,7 +452,7 @@ export default function Hero() {
                 </div>
 
                 {/* Right Side - Person 2 */}
-                <div className="absolute -bottom-[12%] sm:-bottom-[8%] right-[-5%] sm:right-[-2%] w-[650px] sm:w-[480px] lg:w-[630px] xl:w-[780px] pointer-events-auto">
+                <div className="absolute -bottom-[12%] sm:-bottom-[8%] right-[-20%] sm:right-[-2%] w-[120vw] sm:w-[480px] lg:w-[630px] xl:w-[780px] pointer-events-auto transform-gpu">
                     {/* Chat bubble on desktop */}
                     <div className="hidden md:block absolute top-[10%] left-1/2 -translate-x-1/2 z-50">
                         <ChatBubble isHovered={activeBubble === 2} />

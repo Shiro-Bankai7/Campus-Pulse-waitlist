@@ -75,7 +75,7 @@ export default function Organizers() {
                         className="lg:w-1/2 relative"
                     >
                         {/* Card Stack Effect */}
-                        <div className="relative z-10 bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl">
+                        <div className="relative z-10 bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md md:backdrop-blur-xl">
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <h3 className="text-2xl font-bold text-white mb-1">Neon Night 2025</h3>
